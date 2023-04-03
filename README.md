@@ -1,1 +1,1 @@
-# Payment-Zen
+# Payment Zen
