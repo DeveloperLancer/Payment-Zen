@@ -15,6 +15,9 @@ use DevLancer\Payment\Helper\TestModeTrait;
 use DevLancer\Payment\TransferInterface;
 use Psr\Http\Message\ResponseInterface;
 
+/**
+ * Gotowy interfejs do obsługi płatności Zen
+ */
 class Zen
 {
     use TestModeTrait;
@@ -38,34 +41,16 @@ class Zen
         return new Checkout($data);
     }
 
-    public function paymentNotification(array|NotificationContainer $container): PaymentNotification
+    public function paymentNotification(NotificationContainer $container, bool $printResponse = false): PaymentNotification
     {
-        if (is_array($container)) {
-            $data = $container;
-            $container = new NotificationContainer(
-                $data['apiKey'],
-                $data['merchantTransactionId'],
-                $data['currency'],
-                floatval($data['amount']),
-                $data['status'],
-                $data['hash']
-            );
+        if ($printResponse) {
+            header('HTTP/1.1 200 OK');
+            header('Content-Type: application/json');
 
-            $args = [
-                'type'              => 'setType',
-                'transactionId'     => 'setTransactionId',
-                'signature'         => 'setSignature',
-                'paymentMethod'     => 'setPaymentMethod',
-                'customer'          => 'setCustomer',
-                'securityStatus'    => 'setSecurityStatus',
-                'riskData'          => 'setRiskData',
-                'email'             => 'setEmail'
+            $response = [
+                'status' => 'ok'
             ];
-
-            foreach ($args as $name => $method) {
-                if (isset($data[$name]))
-                    $container->{$method}($data[$name]);
-            }
+            echo \json_encode($response);
         }
 
         return new PaymentNotification($container);
