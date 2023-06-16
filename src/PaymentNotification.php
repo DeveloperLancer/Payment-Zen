@@ -33,7 +33,7 @@ class PaymentNotification
 
     public function checkSign(): bool
     {
-        return ((string) $this->container) == $this->container->getSignature();
+        return ((string) $this->container) == $this->container->getHash();
     }
 
     public function getStatus()
