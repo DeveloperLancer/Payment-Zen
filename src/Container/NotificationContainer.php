@@ -15,7 +15,7 @@ use DevLancer\Payment\Helper\Currency;
 
 class NotificationContainer
 {
-    private string $apiKey;
+    private string $ipnSecret;
     private ?string $type = null;
     private ?string $transactionId = null;
     private string $merchantTransactionId;
@@ -31,7 +31,7 @@ class NotificationContainer
     private ?string $email = null;
 
     /**
-     * @param string $apiKey
+     * @param string $ipnSecret
      * @param string $merchantTransactionId
      * @param string|Currency $currency
      * @param float $amount
@@ -39,9 +39,9 @@ class NotificationContainer
      * @param string $hash
      * @throws InvalidCurrencyException
      */
-    public function __construct(string $apiKey, string $merchantTransactionId, string|Currency $currency, float $amount, string $status, string $hash)
+    public function __construct(string $ipnSecret, string $merchantTransactionId, string|Currency $currency, float $amount, string $status, string $hash)
     {
-        $this->apiKey = $apiKey;
+        $this->ipnSecret = $ipnSecret;
         $this->merchantTransactionId = $merchantTransactionId;
 
         $this->amount = $amount;
@@ -54,25 +54,20 @@ class NotificationContainer
         $this->currency = $currency;
     }
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
-        $args = [
-            $this->getMerchantTransactionId(),
-            (string) $this->getCurrency(),
-            $this->getAmount(),
-            $this->getStatus(),
-            $this->getApiKey()
-        ];
-
-        return hash("sha256", implode("", $args));
+        return self::hash($this->getMerchantTransactionId(), (string) $this->getCurrency(), $this->getAmount(), $this->getStatus(), $this->getIpnSecret());
     }
 
     /**
      * @return string
      */
-    public function getApiKey(): string
+    public function getIpnSecret(): string
     {
-        return $this->apiKey;
+        return $this->ipnSecret;
     }
 
     /**
@@ -241,5 +236,28 @@ class NotificationContainer
     public function setEmail(string $email): void
     {
         $this->email = $email;
+    }
+
+    /**
+     * @param string $merchantTransactionId
+     * @param string $currency
+     * @param float $amount
+     * @param string $status
+     * @param string $ipnSecret
+     * @return string
+     */
+    public static function hash(string $merchantTransactionId, string $currency, float $amount, string $status, string $ipnSecret): string
+    {
+        $amount = sprintf("%0.2f", $amount);
+
+        $args = [
+            $merchantTransactionId,
+            $currency,
+            $amount,
+            $status,
+            $ipnSecret
+        ];
+
+        return strtoupper(hash("sha256", implode("", $args)));
     }
 }
